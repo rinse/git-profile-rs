@@ -10,7 +10,7 @@ Your profiles are placed on `$XDG_CONFIG/git-profile/<PROFILE-NAME>.gitconfig`.
 The following command will switch the *git profile*.
 
 ```bash
-git-profile switch <PROFILE-NAME>
+git-profile switch <PROFILE-NAME> [--global]
 ```
 
 This command will write down the following line in the local repository.
