@@ -5,7 +5,7 @@ pub fn switch<T: GitConfig>(
     global: bool,
     profile_dir: &str,
     config: &mut T,
-) -> Result<(), Box<dyn std::error::Error>> {
+) -> anyhow::Result<()> {
     let profile_path = format!("{}/{}.gitconfig", profile_dir, profile_name);
     config.set_include_path(&profile_path)?;
     if global {
@@ -39,7 +39,7 @@ mod tests {
     }
 
     impl GitConfig for MockGitConfig {
-        fn set_include_path(&mut self, path: &str) -> Result<(), Box<dyn std::error::Error>> {
+        fn set_include_path(&mut self, path: &str) -> crate::error::Result<()> {
             self.config.insert("include.path".to_string(), path.to_string());
             Ok(())
         }
