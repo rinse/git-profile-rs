@@ -17,10 +17,20 @@ fn main() {
                     std::process::exit(1);
                 }
             };
-            if let Err(e) = profile::switch::switch(&profile_name, global, &mut config) {
+            let profile_dir = get_profile_dir();
+            if let Err(e) = profile::switch::switch(&profile_name, global, &profile_dir, &mut config) {
                 eprintln!("Error: {}", e);
                 std::process::exit(1);
             }
         }
     }
+}
+
+fn get_profile_dir() -> String {
+    let xdg_config = if let Ok(xdg_config) = std::env::var("XDG_CONFIG_HOME") {
+        xdg_config
+    } else {
+        format!("{}/.config", std::env::var("HOME").unwrap())
+    };
+    format!("{}/git-profile", xdg_config)
 }
