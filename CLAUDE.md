@@ -20,12 +20,16 @@ The tool modifies Git configuration by adding include paths to either local repo
 - **Build**: `cargo build`
 - **Run**: `cargo run -- switch <PROFILE-NAME> [--global]`
 - **Check code**: `cargo clippy`
+- **Run tests**: `cargo test`
 - **Test switching**: `cargo run -- switch sample` then verify with `git config user.name` and `git config user.email`
 
 ## Code Style
 
 - No empty lines within function bodies
 - All source files must end with a newline character
+- Empty lines must contain no spaces or tabs (completely empty)
+- Prefer functional-style code with conditional assignment to function pointers over duplicating code blocks
+- Use concise conditional logic to avoid verbose if-else structures
 
 ## Profile Setup
 
