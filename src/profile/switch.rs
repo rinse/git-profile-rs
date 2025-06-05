@@ -1,21 +1,6 @@
 use crate::error::GitProfileError;
 use crate::profile::git_config::GitConfig;
 
-fn validate_profile_name(profile_name: &str) -> Result<(), GitProfileError> {
-    if profile_name.is_empty()
-        || profile_name.contains('/')
-        || profile_name.contains('\\')
-        || profile_name.contains('\0')
-        || profile_name == "."
-        || profile_name == ".."
-    {
-        return Err(GitProfileError::ProfilePath {
-            path: profile_name.to_string(),
-        });
-    }
-    Ok(())
-}
-
 pub fn switch<T: GitConfig>(
     profile_name: &str,
     global: bool,
@@ -29,6 +14,21 @@ pub fn switch<T: GitConfig>(
         println!("Global git profile switched to: {}", profile_name);
     } else {
         println!("Local git profile switched to: {}", profile_name);
+    }
+    Ok(())
+}
+
+fn validate_profile_name(profile_name: &str) -> Result<(), GitProfileError> {
+    if profile_name.is_empty()
+        || profile_name.contains('/')
+        || profile_name.contains('\\')
+        || profile_name.contains('\0')
+        || profile_name == "."
+        || profile_name == ".."
+    {
+        return Err(GitProfileError::ProfilePath {
+            path: profile_name.to_string(),
+        });
     }
     Ok(())
 }
