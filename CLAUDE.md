@@ -28,6 +28,14 @@ The tool modifies Git configuration by adding include paths to either local repo
 
 - **Always commit Cargo.lock**: When modifying `Cargo.toml`, always run `cargo build` and include `Cargo.lock` in your commit with `git add Cargo.lock`
 
+## Git Workflow Preferences
+
+- **Discard changes**: Use `git restore <PATH>` instead of `git checkout -- <PATH>`
+- **Push branches**: Don't use `-u` flag (no upstream tracking) - just `git push origin <branch>`
+- **Add files**: Use specific file paths with `git add file1 file2 file3` rather than `git add -A` or `git add .`
+- **Tag format**: Use semantic versioning without 'v' prefix (e.g., `1.0.0` not `v1.0.0`)
+- **PR creation**: Always collect git context first with `git diff main...HEAD` and `git log` to understand all changes
+
 ## Code Style
 
 - No empty lines within function bodies
@@ -37,6 +45,7 @@ The tool modifies Git configuration by adding include paths to either local repo
 - Use concise conditional logic to avoid verbose if-else structures
 - Order functions with dependents before dependencies (callers before callees)
 - Place public functions before private functions
+- Don't use type aliases for Result types - write `Result<T, ErrorType>` explicitly
 
 ## Profile Setup
 
