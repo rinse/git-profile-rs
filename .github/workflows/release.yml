@@ -34,13 +34,13 @@ jobs:
     strategy:
       matrix:
         include:
-          # Linux
-          - os: ubuntu-latest
-            target: x86_64-unknown-linux-gnu
+          # Linux - using musl for static linking and better compatibility
+          - os: ubuntu-20.04
+            target: x86_64-unknown-linux-musl
             artifact_name: git-profile-rs
             asset_name: git-profile-rs-linux-amd64
-          - os: ubuntu-latest
-            target: aarch64-unknown-linux-gnu
+          - os: ubuntu-20.04
+            target: aarch64-unknown-linux-musl
             artifact_name: git-profile-rs
             asset_name: git-profile-rs-linux-arm64
             use_cross: true
