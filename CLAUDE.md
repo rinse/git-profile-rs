@@ -24,6 +24,10 @@ The tool modifies Git configuration by adding include paths to either local repo
 - **Run tests**: `cargo test`
 - **Test switching**: `cargo run -- switch sample` then verify with `git config user.name` and `git config user.email`
 
+## Important Reminders
+
+- **Always commit Cargo.lock**: When modifying `Cargo.toml`, always run `cargo build` and include `Cargo.lock` in your commit with `git add Cargo.lock`
+
 ## Code Style
 
 - No empty lines within function bodies
