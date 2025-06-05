@@ -1,15 +1,22 @@
 mod cli;
 mod profile;
 
+use crate::profile::git_config_git2::Git2Config;
 use clap::Parser;
 use cli::{Cli, Commands};
-use crate::profile::git_config_git2::Git2Config;
 
 fn main() {
     let cli = Cli::parse();
     match cli.command {
-        Commands::Switch { profile_name, global } => {
-            let open_config = if global { Git2Config::open_global } else { Git2Config::open_local };
+        Commands::Switch {
+            profile_name,
+            global,
+        } => {
+            let open_config = if global {
+                Git2Config::open_global
+            } else {
+                Git2Config::open_local
+            };
             let mut config = match open_config() {
                 Ok(config) => config,
                 Err(e) => {
@@ -18,7 +25,9 @@ fn main() {
                 }
             };
             let profile_dir = get_profile_dir();
-            if let Err(e) = profile::switch::switch(&profile_name, global, &profile_dir, &mut config) {
+            if let Err(e) =
+                profile::switch::switch(&profile_name, global, &profile_dir, &mut config)
+            {
                 eprintln!("Error: {}", e);
                 std::process::exit(1);
             }
