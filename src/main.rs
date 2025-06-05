@@ -21,7 +21,7 @@ fn main() -> anyhow::Result<()> {
             };
             let mut config = open_config()
                 .with_context(|| format!("Failed to open {} git configuration", if global { "global" } else { "local" }))?;
-            let profile_dir = get_profile_dir();
+            let profile_dir = get_profile_dir()?;
             profile::switch::switch(&profile_name, global, &profile_dir, &mut config)
                 .with_context(|| format!("Failed to switch to profile '{}'", profile_name))?;
         }
@@ -29,11 +29,15 @@ fn main() -> anyhow::Result<()> {
     Ok(())
 }
 
-fn get_profile_dir() -> String {
+fn get_profile_dir() -> Result<String, crate::error::GitProfileError> {
     let xdg_config = if let Ok(xdg_config) = std::env::var("XDG_CONFIG_HOME") {
         xdg_config
     } else {
-        format!("{}/.config", std::env::var("HOME").unwrap())
+        let home = std::env::var("HOME")
+            .map_err(|_| crate::error::GitProfileError::Environment { 
+                variable: "HOME".to_string() 
+            })?;
+        format!("{}/.config", home)
     };
-    format!("{}/git-profile", xdg_config)
+    Ok(format!("{}/git-profile", xdg_config))
 }

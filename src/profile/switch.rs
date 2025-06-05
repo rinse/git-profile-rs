@@ -6,6 +6,13 @@ pub fn switch<T: GitConfig>(
     profile_dir: &str,
     config: &mut T,
 ) -> anyhow::Result<()> {
+    // Validate profile name doesn't contain path separators or other invalid characters
+    if profile_name.contains('/') || profile_name.contains('\\') || 
+       profile_name.contains('\0') || profile_name == "." || profile_name == ".." {
+        return Err(crate::error::GitProfileError::ProfilePath { 
+            path: profile_name.to_string() 
+        }.into());
+    }
     let profile_path = format!("{}/{}.gitconfig", profile_dir, profile_name);
     config.set_include_path(&profile_path)?;
     if global {
@@ -75,5 +82,30 @@ mod tests {
             mock_config.get("include.path"),
             Some(&"/test/config/git-profile/globalprofile.gitconfig".to_string())
         );
+    }
+
+    #[test]
+    fn test_invalid_profile_names() {
+        let mut mock_config = MockGitConfig::new();
+        
+        // Test profile name with forward slash
+        let result = switch("invalid/profile", false, "/test/config", &mut mock_config);
+        assert!(result.is_err());
+        
+        // Test profile name with backslash
+        let result = switch("invalid\\profile", false, "/test/config", &mut mock_config);
+        assert!(result.is_err());
+        
+        // Test profile name with null character
+        let result = switch("invalid\0profile", false, "/test/config", &mut mock_config);
+        assert!(result.is_err());
+        
+        // Test "." as profile name
+        let result = switch(".", false, "/test/config", &mut mock_config);
+        assert!(result.is_err());
+        
+        // Test ".." as profile name
+        let result = switch("..", false, "/test/config", &mut mock_config);
+        assert!(result.is_err());
     }
 }
