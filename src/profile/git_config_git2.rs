@@ -1,5 +1,5 @@
-use git2::{Config, Repository};
 use super::git_config::GitConfig;
+use git2::{Config, Repository};
 
 pub struct Git2Config {
     config: Config,
