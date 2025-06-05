@@ -74,7 +74,7 @@ jobs:
 
       - name: Build with cargo
         if: matrix.use_cross != true
-        run: cargo build --release --target ${{ matrix.target }}
+        run: cargo build --release --target ${{ matrix.target }} --features vendored-openssl
 
       - name: Build with cross
         if: matrix.use_cross == true
@@ -82,7 +82,7 @@ jobs:
         with:
           use-cross: true
           command: build
-          args: --release --target ${{ matrix.target }}
+          args: --release --target ${{ matrix.target }} --features vendored-openssl
 
       - name: Upload Release Asset
         uses: actions/upload-release-asset@v1
