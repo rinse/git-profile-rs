@@ -1,4 +1,5 @@
 use super::git_config::GitConfig;
+use crate::error::GitProfileError;
 use git2::{Config, Repository};
 
 pub struct Git2Config {
@@ -6,22 +7,23 @@ pub struct Git2Config {
 }
 
 impl Git2Config {
-    pub fn open_global() -> Result<Self, Box<dyn std::error::Error>> {
-        Ok(Git2Config {
-            config: Config::open_default()?,
-        })
+    pub fn open_global() -> Result<Self, GitProfileError> {
+        let config = Config::open_default()
+            .map_err(GitProfileError::ConfigAccess)?;
+        Ok(Git2Config { config })
     }
-    pub fn open_local() -> Result<Self, Box<dyn std::error::Error>> {
+    pub fn open_local() -> Result<Self, GitProfileError> {
         let repo = Repository::open(".")?;
-        Ok(Git2Config {
-            config: repo.config()?,
-        })
+        let config = repo.config()
+            .map_err(GitProfileError::ConfigAccess)?;
+        Ok(Git2Config { config })
     }
 }
 
 impl GitConfig for Git2Config {
-    fn set_include_path(&mut self, path: &str) -> Result<(), Box<dyn std::error::Error>> {
-        self.config.set_str("include.path", path)?;
+    fn set_include_path(&mut self, path: &str) -> Result<(), GitProfileError> {
+        self.config.set_str("include.path", path)
+            .map_err(GitProfileError::ConfigAccess)?;
         Ok(())
     }
 }

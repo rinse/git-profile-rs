@@ -1,11 +1,13 @@
 mod cli;
+mod error;
 mod profile;
 
+use anyhow::Context;
 use crate::profile::git_config_git2::Git2Config;
 use clap::Parser;
 use cli::{Cli, Commands};
 
-fn main() {
+fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
     match cli.command {
         Commands::Switch {
@@ -17,22 +19,14 @@ fn main() {
             } else {
                 Git2Config::open_local
             };
-            let mut config = match open_config() {
-                Ok(config) => config,
-                Err(e) => {
-                    eprintln!("Error opening global config: {}", e);
-                    std::process::exit(1);
-                }
-            };
+            let mut config = open_config()
+                .with_context(|| format!("Failed to open {} git configuration", if global { "global" } else { "local" }))?;
             let profile_dir = get_profile_dir();
-            if let Err(e) =
-                profile::switch::switch(&profile_name, global, &profile_dir, &mut config)
-            {
-                eprintln!("Error: {}", e);
-                std::process::exit(1);
-            }
+            profile::switch::switch(&profile_name, global, &profile_dir, &mut config)
+                .with_context(|| format!("Failed to switch to profile '{}'", profile_name))?;
         }
     }
+    Ok(())
 }
 
 fn get_profile_dir() -> String {
