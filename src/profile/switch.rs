@@ -1,13 +1,14 @@
-use crate::profile::git_config::GitConfig;
 use crate::error::GitProfileError;
+use crate::profile::git_config::GitConfig;
 
 fn validate_profile_name(profile_name: &str) -> Result<(), GitProfileError> {
-    if profile_name.is_empty() ||
-       profile_name.contains('/') || 
-       profile_name.contains('\\') || 
-       profile_name.contains('\0') || 
-       profile_name == "." || 
-       profile_name == ".." {
+    if profile_name.is_empty()
+        || profile_name.contains('/')
+        || profile_name.contains('\\')
+        || profile_name.contains('\0')
+        || profile_name == "."
+        || profile_name == ".."
+    {
         return Err(GitProfileError::ProfilePath {
             path: profile_name.to_string(),
         });
@@ -100,7 +101,7 @@ mod tests {
         assert!(validate_profile_name("personal").is_ok());
         assert!(validate_profile_name("project-123").is_ok());
         assert!(validate_profile_name("my_profile").is_ok());
-        
+
         // Invalid profile names
         assert!(validate_profile_name("").is_err());
         assert!(validate_profile_name("invalid/profile").is_err());
@@ -113,27 +114,27 @@ mod tests {
     #[test]
     fn test_switch_with_invalid_profile_names() {
         let mut mock_config = MockGitConfig::new();
-        
+
         // Test empty profile name
         let result = switch("", false, "/test/config", &mut mock_config);
         assert!(result.is_err());
-        
+
         // Test profile name with forward slash
         let result = switch("invalid/profile", false, "/test/config", &mut mock_config);
         assert!(result.is_err());
-        
+
         // Test profile name with backslash
         let result = switch("invalid\\profile", false, "/test/config", &mut mock_config);
         assert!(result.is_err());
-        
+
         // Test profile name with null character
         let result = switch("invalid\0profile", false, "/test/config", &mut mock_config);
         assert!(result.is_err());
-        
+
         // Test "." as profile name
         let result = switch(".", false, "/test/config", &mut mock_config);
         assert!(result.is_err());
-        
+
         // Test ".." as profile name
         let result = switch("..", false, "/test/config", &mut mock_config);
         assert!(result.is_err());
