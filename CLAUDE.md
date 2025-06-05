@@ -20,6 +20,7 @@ The tool modifies Git configuration by adding include paths to either local repo
 - **Build**: `cargo build`
 - **Run**: `cargo run -- switch <PROFILE-NAME> [--global]`
 - **Check code**: `cargo clippy`
+- **Check formatting**: `cargo fmt --check` (run before committing)
 - **Run tests**: `cargo test`
 - **Test switching**: `cargo run -- switch sample` then verify with `git config user.name` and `git config user.email`
 
