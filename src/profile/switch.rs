@@ -2,14 +2,8 @@ use crate::profile::git_config::GitConfig;
 use crate::error::GitProfileError;
 
 fn validate_profile_name(profile_name: &str) -> Result<(), GitProfileError> {
-    if profile_name.is_empty() {
-        return Err(GitProfileError::ProfilePath {
-            path: profile_name.to_string(),
-        });
-    }
-    
-    // Check for path separators and dangerous characters
-    if profile_name.contains('/') || 
+    if profile_name.is_empty() ||
+       profile_name.contains('/') || 
        profile_name.contains('\\') || 
        profile_name.contains('\0') || 
        profile_name == "." || 
@@ -18,7 +12,6 @@ fn validate_profile_name(profile_name: &str) -> Result<(), GitProfileError> {
             path: profile_name.to_string(),
         });
     }
-    
     Ok(())
 }
 
