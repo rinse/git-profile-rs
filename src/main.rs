@@ -3,9 +3,9 @@ mod error;
 mod profile;
 
 use anyhow::Context;
+use crate::profile::git_config_git2::Git2Config;
 use clap::Parser;
 use cli::{Cli, Commands};
-use crate::profile::git_config_git2::Git2Config;
 
 fn main() {
     if let Err(e) = run() {
@@ -17,8 +17,15 @@ fn main() {
 fn run() -> anyhow::Result<()> {
     let cli = Cli::parse();
     match cli.command {
-        Commands::Switch { profile_name, global } => {
-            let open_config = if global { Git2Config::open_global } else { Git2Config::open_local };
+        Commands::Switch {
+            profile_name,
+            global,
+        } => {
+            let open_config = if global {
+                Git2Config::open_global
+            } else {
+                Git2Config::open_local
+            };
             let mut config = open_config()
                 .with_context(|| format!("Failed to open {} git configuration", if global { "global" } else { "local" }))?;
             let profile_dir = get_profile_dir()?;

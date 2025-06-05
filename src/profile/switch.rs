@@ -16,7 +16,6 @@ pub fn switch<T: GitConfig>(
     Ok(())
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -40,7 +39,8 @@ mod tests {
 
     impl GitConfig for MockGitConfig {
         fn set_include_path(&mut self, path: &str) -> crate::error::Result<()> {
-            self.config.insert("include.path".to_string(), path.to_string());
+            self.config
+                .insert("include.path".to_string(), path.to_string());
             Ok(())
         }
     }
@@ -48,16 +48,32 @@ mod tests {
     #[test]
     fn test_switch_with_mock_config() {
         let mut mock_config = MockGitConfig::new();
-        let result = switch("testprofile", false, "/test/config/git-profile", &mut mock_config);
+        let result = switch(
+            "testprofile",
+            false,
+            "/test/config/git-profile",
+            &mut mock_config,
+        );
         assert!(result.is_ok());
-        assert_eq!(mock_config.get("include.path"), Some(&"/test/config/git-profile/testprofile.gitconfig".to_string()));
+        assert_eq!(
+            mock_config.get("include.path"),
+            Some(&"/test/config/git-profile/testprofile.gitconfig".to_string())
+        );
     }
 
     #[test]
     fn test_switch_global_flag() {
         let mut mock_config = MockGitConfig::new();
-        let result = switch("globalprofile", true, "/test/config/git-profile", &mut mock_config);
+        let result = switch(
+            "globalprofile",
+            true,
+            "/test/config/git-profile",
+            &mut mock_config,
+        );
         assert!(result.is_ok());
-        assert_eq!(mock_config.get("include.path"), Some(&"/test/config/git-profile/globalprofile.gitconfig".to_string()));
+        assert_eq!(
+            mock_config.get("include.path"),
+            Some(&"/test/config/git-profile/globalprofile.gitconfig".to_string())
+        );
     }
 }
