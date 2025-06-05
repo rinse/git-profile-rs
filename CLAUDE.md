@@ -31,6 +31,8 @@ The tool modifies Git configuration by adding include paths to either local repo
 - Empty lines must contain no spaces or tabs (completely empty)
 - Prefer functional-style code with conditional assignment to function pointers over duplicating code blocks
 - Use concise conditional logic to avoid verbose if-else structures
+- Order functions with dependents before dependencies (callers before callees)
+- Place public functions before private functions
 
 ## Profile Setup
 
