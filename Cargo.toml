@@ -1,5 +1,5 @@
 [package]
-name = "git-profile-rs"
+name = "git-profile"
 version = "0.1.0"
 edition = "2021"
 
