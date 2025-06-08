@@ -30,6 +30,7 @@ The tool modifies Git configuration by adding include paths to either local repo
 
 ## Git Workflow Preferences
 
+- **Branch checking**: When starting a new task, check the current branch with `git branch --show-current`. If on main branch, pull and update it with `git pull origin main` to ensure no conflicts with remote changes
 - **Discard changes**: Use `git restore <PATH>` instead of `git checkout -- <PATH>`
 - **Push branches**: Don't use `-u` flag (no upstream tracking) - just `git push origin <branch>`
 - **Add files**: Use specific file paths with `git add file1 file2 file3` rather than `git add -A` or `git add .`
