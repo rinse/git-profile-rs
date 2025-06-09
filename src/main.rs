@@ -37,16 +37,12 @@ fn main() -> anyhow::Result<()> {
             let profiles =
                 profile::list::list_profiles(std::path::Path::new(&profile_dir), &config)
                     .with_context(|| "Failed to list profiles")?;
-            if profiles.is_empty() {
-                println!("No profiles found in {}", profile_dir);
-            } else {
-                for (name, path, is_current) in profiles {
-                    let marker = if is_current { "* " } else { "  " };
-                    if verbose {
-                        println!("{}{} -> {}", marker, name, path);
-                    } else {
-                        println!("{}{}", marker, name);
-                    }
+            for (name, path, is_current) in profiles {
+                let marker = if is_current { "* " } else { "  " };
+                if verbose {
+                    println!("{}{} -> {}", marker, name, path);
+                } else {
+                    println!("{}{}", marker, name);
                 }
             }
         }
