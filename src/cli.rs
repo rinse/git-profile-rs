@@ -18,4 +18,6 @@ pub enum Commands {
         #[arg(long, short)]
         global: bool,
     },
+    /// List available git profiles
+    List,
 }

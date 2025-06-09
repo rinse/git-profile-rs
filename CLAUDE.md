@@ -38,6 +38,16 @@ The tool modifies Git configuration by adding include paths to either local repo
 - **Tag format**: Use semantic versioning without 'v' prefix (e.g., `1.0.0` not `v1.0.0`)
 - **PR creation**: Always collect git context first with `git diff main...HEAD` and `git log` to understand all changes
 
+### Recovery from Accidental Main Branch Changes
+
+If changes were accidentally made on the main branch instead of a feature branch:
+
+1. **Switch to new feature branch**: `git checkout -b feature/branch-name`
+2. **Update main**: `git pull origin main:main` 
+3. **Merge main to feature branch**: `git merge main`
+
+This preserves your changes on the feature branch while ensuring main stays in sync with the remote.
+
 ## Code Style
 
 - No empty lines within function bodies

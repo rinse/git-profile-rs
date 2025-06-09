@@ -29,6 +29,19 @@ fn main() -> anyhow::Result<()> {
             profile::switch::switch(&profile_name, global, &profile_dir, &mut config)
                 .with_context(|| format!("Failed to switch to profile '{}'", profile_name))?;
         }
+        Commands::List => {
+            let profile_dir = get_profile_dir()?;
+            let profiles = profile::list::list_profiles(std::path::Path::new(&profile_dir))
+                .with_context(|| "Failed to list profiles")?;
+            if profiles.is_empty() {
+                println!("No profiles found in {}", profile_dir);
+            } else {
+                println!("Available profiles:");
+                for (name, path) in profiles {
+                    println!("  {} -> {}", name, path);
+                }
+            }
+        }
     }
     Ok(())
 }
