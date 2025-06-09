@@ -4,8 +4,8 @@ mod git_config;
 mod profile;
 
 use crate::config_dir::ConfigDir;
-use crate::profile::git_config_git2::Git2Config;
-use crate::profile::git_profile_dir::GitProfileConfigDir;
+use crate::profile::git_config_git2::GitConfigGit2;
+use crate::profile::git_profile_config_dir::GitProfileConfigDir;
 use anyhow::Context;
 use clap::Parser;
 use cli::{Cli, Commands};
@@ -25,9 +25,9 @@ fn main() -> anyhow::Result<()> {
 
 fn switch(profile_name: &str, global: bool, profile_dir: &impl ConfigDir) -> anyhow::Result<()> {
     let open_config = if global {
-        Git2Config::open_global
+        GitConfigGit2::open_global
     } else {
-        Git2Config::open_local
+        GitConfigGit2::open_local
     };
     let mut config = open_config().with_context(|| {
         format!(
@@ -41,8 +41,8 @@ fn switch(profile_name: &str, global: bool, profile_dir: &impl ConfigDir) -> any
 }
 
 fn list(verbose: bool, profile_dir: &impl ConfigDir) -> anyhow::Result<()> {
-    let config = Git2Config::open_local()
-        .or_else(|_| Git2Config::open_global())
+    let config = GitConfigGit2::open_local()
+        .or_else(|_| GitConfigGit2::open_global())
         .with_context(|| "Failed to open git configuration")?;
     let profiles = profile::list::list_profiles(&profile_dir.path(), &config)
         .with_context(|| "Failed to list profiles")?;

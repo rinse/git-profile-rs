@@ -2,23 +2,23 @@ use crate::git_config::GitConfig;
 use crate::profile::error::GitProfileError;
 use git2::{Config, Repository};
 
-pub struct Git2Config {
+pub struct GitConfigGit2 {
     config: Config,
 }
 
-impl Git2Config {
+impl GitConfigGit2 {
     pub fn open_global() -> Result<Self, GitProfileError> {
         let config = Config::open_default().map_err(GitProfileError::ConfigAccess)?;
-        Ok(Git2Config { config })
+        Ok(GitConfigGit2 { config })
     }
     pub fn open_local() -> Result<Self, GitProfileError> {
         let repo = Repository::open(".")?;
         let config = repo.config().map_err(GitProfileError::ConfigAccess)?;
-        Ok(Git2Config { config })
+        Ok(GitConfigGit2 { config })
     }
 }
 
-impl GitConfig for Git2Config {
+impl GitConfig for GitConfigGit2 {
     fn add_include_path(&mut self, path: &str) -> Result<(), GitProfileError> {
         self.config
             .set_multivar("include.path", "^$", path)
