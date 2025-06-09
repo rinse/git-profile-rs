@@ -17,4 +17,7 @@ pub enum GitProfileError {
 
     #[error("IO error: {0}")]
     Io(#[from] std::io::Error),
+
+    #[error("Configuration error: {0}")]
+    ConfigError(String),
 }

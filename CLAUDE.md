@@ -38,6 +38,47 @@ The tool modifies Git configuration by adding include paths to either local repo
 - **Tag format**: Use semantic versioning without 'v' prefix (e.g., `1.0.0` not `v1.0.0`)
 - **PR creation**: Always collect git context first with `git diff main...HEAD` and `git log` to understand all changes
 
+### Recovery from Accidental Main Branch Changes
+
+If changes were accidentally made on the main branch instead of a feature branch:
+
+1. **Switch to new feature branch**: `git checkout -b feature/branch-name`
+2. **Update main**: `git pull origin main:main` 
+3. **Merge main to feature branch**: `git merge main`
+
+This preserves your changes on the feature branch while ensuring main stays in sync with the remote.
+
+### Viewing Unresolved PR Comments
+
+To efficiently view only unresolved PR comments, use this command:
+
+```bash
+gh api graphql -f query='
+{
+  repository(owner: "rinse", name: "git-profile-rs") {
+    pullRequest(number: PR_NUMBER) {
+      reviewThreads(first: 100) {
+        nodes {
+          isResolved
+          path
+          line
+          comments(first: 1) {
+            nodes {
+              body
+              author {
+                login
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}' | jq '.data.repository.pullRequest.reviewThreads.nodes[] | select(.isResolved == false)'
+```
+
+Replace `PR_NUMBER` with the actual pull request number. This command filters to show only unresolved comments, saving tokens and making it easier to see what needs to be addressed.
+
 ## Code Style
 
 - No empty lines within function bodies

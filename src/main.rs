@@ -29,6 +29,23 @@ fn main() -> anyhow::Result<()> {
             profile::switch::switch(&profile_name, global, &profile_dir, &mut config)
                 .with_context(|| format!("Failed to switch to profile '{}'", profile_name))?;
         }
+        Commands::List { verbose } => {
+            let profile_dir = get_profile_dir()?;
+            let config = Git2Config::open_local()
+                .or_else(|_| Git2Config::open_global())
+                .with_context(|| "Failed to open git configuration")?;
+            let profiles =
+                profile::list::list_profiles(std::path::Path::new(&profile_dir), &config)
+                    .with_context(|| "Failed to list profiles")?;
+            for (name, path, is_current) in profiles {
+                let marker = if is_current { "* " } else { "  " };
+                if verbose {
+                    println!("{}{} -> {}", marker, name, path);
+                } else {
+                    println!("{}{}", marker, name);
+                }
+            }
+        }
     }
     Ok(())
 }

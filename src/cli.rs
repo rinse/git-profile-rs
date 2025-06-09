@@ -18,4 +18,10 @@ pub enum Commands {
         #[arg(long, short)]
         global: bool,
     },
+    /// List available git profiles
+    List {
+        /// Show verbose output with file paths
+        #[arg(long, short)]
+        verbose: bool,
+    },
 }
