@@ -40,9 +40,6 @@ fn main() -> anyhow::Result<()> {
             if profiles.is_empty() {
                 println!("No profiles found in {}", profile_dir);
             } else {
-                if verbose {
-                    println!("Available profiles:");
-                }
                 for (name, path, is_current) in profiles {
                     let marker = if is_current { "* " } else { "  " };
                     if verbose {

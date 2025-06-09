@@ -1,7 +1,7 @@
 use crate::error::GitProfileError;
 use crate::profile::git_config::GitConfig;
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 pub fn list_profiles(
     profile_dir: &Path,
@@ -19,21 +19,26 @@ pub fn list_profiles(
         let entry = entry.map_err(|e| {
             GitProfileError::ConfigError(format!("Failed to read directory entry: {}", e))
         })?;
-        let path = entry.path();
-        if path.is_file() {
-            if let Some(extension) = path.extension() {
-                if extension == "gitconfig" {
-                    if let Some(stem) = path.file_stem() {
-                        if let Some(name) = stem.to_str() {
-                            let path_string = path.to_string_lossy().to_string();
-                            let is_current = current_include_paths.contains(&path_string);
-                            profiles.push((name.to_string(), path_string, is_current));
-                        }
-                    }
-                }
-            }
+        if let Some(profile) = process_profile_entry(entry.path(), &current_include_paths) {
+            profiles.push(profile);
         }
     }
     profiles.sort_by(|a, b| a.0.cmp(&b.0));
     Ok(profiles)
+}
+
+fn process_profile_entry(
+    path: PathBuf,
+    current_include_paths: &[String],
+) -> Option<(String, String, bool)> {
+    if !path.is_file() {
+        return None;
+    }
+    if path.extension()? != "gitconfig" {
+        return None;
+    }
+    let name = path.file_stem()?.to_str()?.to_string();
+    let path_string = path.to_string_lossy().to_string();
+    let is_current = current_include_paths.contains(&path_string);
+    Some((name, path_string, is_current))
 }
