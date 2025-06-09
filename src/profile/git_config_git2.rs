@@ -19,29 +19,18 @@ impl Git2Config {
 }
 
 impl GitConfig for Git2Config {
-    fn set_include_path(
-        &mut self,
-        path: &str,
-        profile_dir: &impl crate::config_dir::ConfigDir,
-    ) -> Result<(), GitProfileError> {
-        // Get all existing include paths
-        let mut existing_paths = self.get_include_paths()?;
-        // Remove any git-profile related paths (those under the profile directory)
-        existing_paths.retain(|p| !std::path::Path::new(p).starts_with(profile_dir.path()));
-        // Add the new path
-        existing_paths.push(path.to_string());
-        // Remove all include.path entries first
+    fn add_include_path(&mut self, path: &str) -> Result<(), GitProfileError> {
         self.config
-            .remove_multivar("include.path", ".*")
-            .map_err(GitProfileError::ConfigAccess)?;
-        // Add all paths back as multivars
-        for include_path in existing_paths {
-            self.config
-                .set_multivar("include.path", "^$", &include_path)
-                .map_err(GitProfileError::ConfigAccess)?;
-        }
-        Ok(())
+            .set_multivar("include.path", "^$", path)
+            .map_err(GitProfileError::ConfigAccess)
     }
+
+    fn remove_include_path(&mut self, path: &str) -> Result<(), GitProfileError> {
+        self.config
+            .remove_multivar("include.path", path)
+            .map_err(GitProfileError::ConfigAccess)
+    }
+
     fn get_include_paths(&self) -> Result<Vec<String>, GitProfileError> {
         let mut paths = Vec::new();
         let mut entries = self

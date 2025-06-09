@@ -14,7 +14,13 @@ pub fn switch<T: GitConfig, U: ConfigDir>(
         profile_dir.path().display(),
         profile_name
     );
-    config.set_include_path(&profile_path, profile_dir)?;
+    let existing_paths = config.get_include_paths()?;
+    for path in &existing_paths {
+        if std::path::Path::new(path).starts_with(profile_dir.path()) {
+            config.remove_include_path(path)?;
+        }
+    }
+    config.add_include_path(&profile_path)?;
     if global {
         println!("Global git profile switched to: {}", profile_name);
     } else {
@@ -81,18 +87,16 @@ mod tests {
     }
 
     impl GitConfig for MockGitConfig {
-        fn set_include_path(
-            &mut self,
-            path: &str,
-            profile_dir: &impl crate::config_dir::ConfigDir,
-        ) -> Result<(), crate::profile::error::GitProfileError> {
-            // Remove any git-profile related paths (those under the profile directory)
-            self.include_paths
-                .retain(|p| !std::path::Path::new(p).starts_with(profile_dir.path()));
-            // Add the new path
+        fn add_include_path(&mut self, path: &str) -> Result<(), crate::profile::error::GitProfileError> {
             self.include_paths.push(path.to_string());
             Ok(())
         }
+
+        fn remove_include_path(&mut self, path: &str) -> Result<(), crate::profile::error::GitProfileError> {
+            self.include_paths.retain(|p| p != path);
+            Ok(())
+        }
+
         fn get_include_paths(&self) -> Result<Vec<String>, crate::profile::error::GitProfileError> {
             Ok(self.include_paths.clone())
         }
