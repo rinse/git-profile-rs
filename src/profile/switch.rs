@@ -1,8 +1,8 @@
-use crate::error::GitProfileError;
-use crate::profile::git_config::GitConfig;
-use crate::profile::git_profile_dir::GitProfileDir;
+use crate::config_dir::ConfigDir;
+use crate::git_config::GitConfig;
+use crate::profile::error::GitProfileError;
 
-pub fn switch<T: GitConfig, U: GitProfileDir>(
+pub fn switch<T: GitConfig, U: ConfigDir>(
     profile_name: &str,
     global: bool,
     profile_dir: &U,
@@ -14,7 +14,13 @@ pub fn switch<T: GitConfig, U: GitProfileDir>(
         profile_dir.path().display(),
         profile_name
     );
-    config.set_include_path(&profile_path, profile_dir)?;
+    let existing_paths = config.get_include_paths()?;
+    for path in &existing_paths {
+        if std::path::Path::new(path).starts_with(profile_dir.path()) {
+            config.remove_include_path(path)?;
+        }
+    }
+    config.add_include_path(&profile_path)?;
     if global {
         println!("Global git profile switched to: {}", profile_name);
     } else {
@@ -58,9 +64,9 @@ mod tests {
         }
     }
 
-    impl GitProfileDir for MockGitProfileDir {
-        fn path(&self) -> &std::path::Path {
-            &self.path
+    impl ConfigDir for MockGitProfileDir {
+        fn path(&self) -> std::path::PathBuf {
+            self.path.clone()
         }
     }
 
@@ -81,19 +87,23 @@ mod tests {
     }
 
     impl GitConfig for MockGitConfig {
-        fn set_include_path(
+        fn add_include_path(
             &mut self,
             path: &str,
-            profile_dir: &impl crate::profile::git_profile_dir::GitProfileDir,
-        ) -> Result<(), crate::error::GitProfileError> {
-            // Remove any git-profile related paths (those under the profile directory)
-            self.include_paths
-                .retain(|p| !std::path::Path::new(p).starts_with(profile_dir.path()));
-            // Add the new path
+        ) -> Result<(), crate::profile::error::GitProfileError> {
             self.include_paths.push(path.to_string());
             Ok(())
         }
-        fn get_include_paths(&self) -> Result<Vec<String>, crate::error::GitProfileError> {
+
+        fn remove_include_path(
+            &mut self,
+            path: &str,
+        ) -> Result<(), crate::profile::error::GitProfileError> {
+            self.include_paths.retain(|p| p != path);
+            Ok(())
+        }
+
+        fn get_include_paths(&self) -> Result<Vec<String>, crate::profile::error::GitProfileError> {
             Ok(self.include_paths.clone())
         }
     }
