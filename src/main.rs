@@ -31,14 +31,19 @@ fn main() -> anyhow::Result<()> {
         }
         Commands::List => {
             let profile_dir = get_profile_dir()?;
-            let profiles = profile::list::list_profiles(std::path::Path::new(&profile_dir))
-                .with_context(|| "Failed to list profiles")?;
+            let config = Git2Config::open_local()
+                .or_else(|_| Git2Config::open_global())
+                .with_context(|| "Failed to open git configuration")?;
+            let profiles =
+                profile::list::list_profiles(std::path::Path::new(&profile_dir), &config)
+                    .with_context(|| "Failed to list profiles")?;
             if profiles.is_empty() {
                 println!("No profiles found in {}", profile_dir);
             } else {
                 println!("Available profiles:");
-                for (name, path) in profiles {
-                    println!("  {} -> {}", name, path);
+                for (name, path, is_current) in profiles {
+                    let marker = if is_current { "* " } else { "  " };
+                    println!("{}{} -> {}", marker, name, path);
                 }
             }
         }

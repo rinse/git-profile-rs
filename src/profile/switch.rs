@@ -60,6 +60,13 @@ mod tests {
                 .insert("include.path".to_string(), path.to_string());
             Ok(())
         }
+        fn get_include_paths(&self) -> Result<Vec<String>, crate::error::GitProfileError> {
+            Ok(self
+                .config
+                .get("include.path")
+                .map(|p| vec![p.clone()])
+                .unwrap_or_default())
+        }
     }
 
     #[test]
