@@ -50,7 +50,7 @@ fn main() -> anyhow::Result<()> {
     Ok(())
 }
 
-fn get_profile_dir() -> Result<String, crate::error::GitProfileError> {
+pub fn get_profile_dir() -> Result<String, crate::error::GitProfileError> {
     let xdg_config = if let Ok(xdg_config) = std::env::var("XDG_CONFIG_HOME") {
         xdg_config
     } else {

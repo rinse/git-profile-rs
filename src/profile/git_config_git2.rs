@@ -22,8 +22,10 @@ impl GitConfig for Git2Config {
     fn set_include_path(&mut self, path: &str) -> Result<(), GitProfileError> {
         // Get all existing include paths
         let mut existing_paths = self.get_include_paths()?;
-        // Remove any git-profile related paths (those containing "git-profile")
-        existing_paths.retain(|p| !p.contains("git-profile"));
+        // Get the profile directory to filter out git-profile paths
+        let profile_dir = crate::get_profile_dir()?;
+        // Remove any git-profile related paths (those under the profile directory)
+        existing_paths.retain(|p| !p.starts_with(&profile_dir));
         // Add the new path
         existing_paths.push(path.to_string());
         // Remove all include.path entries first

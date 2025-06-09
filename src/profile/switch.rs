@@ -59,8 +59,10 @@ mod tests {
 
     impl GitConfig for MockGitConfig {
         fn set_include_path(&mut self, path: &str) -> Result<(), crate::error::GitProfileError> {
-            // Remove any git-profile related paths
-            self.include_paths.retain(|p| !p.contains("git-profile"));
+            // Get the profile directory to filter out git-profile paths
+            let profile_dir = crate::get_profile_dir()?;
+            // Remove any git-profile related paths (those under the profile directory)
+            self.include_paths.retain(|p| !p.starts_with(&profile_dir));
             // Add the new path
             self.include_paths.push(path.to_string());
             Ok(())
@@ -147,25 +149,22 @@ mod tests {
     #[test]
     fn test_switch_replaces_previous_git_profile() {
         let mut mock_config = MockGitConfig::new();
+        // Get the actual profile directory that will be used for filtering
+        let profile_dir = crate::get_profile_dir().unwrap();
         // Set up existing includes including a git-profile one
         mock_config
             .include_paths
             .push("/path/to/delta.gitconfig".to_string());
         mock_config
             .include_paths
-            .push("/home/user/.config/git-profile/personal.gitconfig".to_string());
-        let result = switch(
-            "work",
-            false,
-            "/home/user/.config/git-profile",
-            &mut mock_config,
-        );
+            .push(format!("{}/personal.gitconfig", profile_dir));
+        let result = switch("work", false, &profile_dir, &mut mock_config);
         assert!(result.is_ok());
         // Check that the old git-profile include is replaced
         let paths = mock_config.get_include_paths().unwrap();
         assert_eq!(paths.len(), 2);
         assert_eq!(paths[0], "/path/to/delta.gitconfig");
-        assert_eq!(paths[1], "/home/user/.config/git-profile/work.gitconfig");
+        assert_eq!(paths[1], format!("{}/work.gitconfig", profile_dir));
     }
 
     #[test]
