@@ -30,7 +30,6 @@ fn switch(profile_name: &str, profile_dir: &impl ConfigDir) -> anyhow::Result<()
 
 fn list(verbose: bool, profile_dir: &impl ConfigDir) -> anyhow::Result<()> {
     let config = GitConfigGit2::open_local()
-        .or_else(|_| GitConfigGit2::open_global())
         .with_context(|| "Failed to open git configuration")?;
     let profiles = profile::list::list_profiles(&profile_dir.path(), &config)
         .with_context(|| "Failed to list profiles")?;

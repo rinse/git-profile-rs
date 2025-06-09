@@ -7,10 +7,6 @@ pub struct GitConfigGit2 {
 }
 
 impl GitConfigGit2 {
-    pub fn open_global() -> Result<Self, GitProfileError> {
-        let config = Config::open_default().map_err(GitProfileError::ConfigAccess)?;
-        Ok(GitConfigGit2 { config })
-    }
     pub fn open_local() -> Result<Self, GitProfileError> {
         let repo = Repository::open(".")?;
         let config = repo.config().map_err(GitProfileError::ConfigAccess)?;
