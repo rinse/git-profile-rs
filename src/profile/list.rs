@@ -1,5 +1,5 @@
-use crate::error::GitProfileError;
-use crate::profile::git_config::GitConfig;
+use crate::profile::error::GitProfileError;
+use crate::git_config::GitConfig;
 use std::fs;
 use std::path::{Path, PathBuf};
 

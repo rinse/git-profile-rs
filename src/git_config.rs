@@ -1,5 +1,5 @@
-use super::git_profile_dir::GitProfileDir;
-use crate::error::GitProfileError;
+use crate::profile::git_profile_dir::GitProfileDir;
+use crate::profile::error::GitProfileError;
 
 pub trait GitConfig {
     fn set_include_path(

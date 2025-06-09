@@ -1,5 +1,5 @@
-use super::git_config::GitConfig;
-use crate::error::GitProfileError;
+use crate::git_config::GitConfig;
+use crate::profile::error::GitProfileError;
 use git2::{Config, Repository};
 
 pub struct Git2Config {

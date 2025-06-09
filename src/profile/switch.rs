@@ -1,5 +1,5 @@
-use crate::error::GitProfileError;
-use crate::profile::git_config::GitConfig;
+use crate::profile::error::GitProfileError;
+use crate::git_config::GitConfig;
 use crate::profile::git_profile_dir::GitProfileDir;
 
 pub fn switch<T: GitConfig, U: GitProfileDir>(
@@ -85,7 +85,7 @@ mod tests {
             &mut self,
             path: &str,
             profile_dir: &impl crate::profile::git_profile_dir::GitProfileDir,
-        ) -> Result<(), crate::error::GitProfileError> {
+        ) -> Result<(), crate::profile::error::GitProfileError> {
             // Remove any git-profile related paths (those under the profile directory)
             self.include_paths
                 .retain(|p| !std::path::Path::new(p).starts_with(profile_dir.path()));
@@ -93,7 +93,7 @@ mod tests {
             self.include_paths.push(path.to_string());
             Ok(())
         }
-        fn get_include_paths(&self) -> Result<Vec<String>, crate::error::GitProfileError> {
+        fn get_include_paths(&self) -> Result<Vec<String>, crate::profile::error::GitProfileError> {
             Ok(self.include_paths.clone())
         }
     }

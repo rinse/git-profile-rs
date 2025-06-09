@@ -1,4 +1,4 @@
-use crate::error::GitProfileError;
+use crate::profile::error::GitProfileError;
 use std::path::{Path, PathBuf};
 
 pub trait GitProfileDir {

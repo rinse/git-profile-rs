@@ -1,5 +1,5 @@
 mod cli;
-mod error;
+mod git_config;
 mod profile;
 
 use crate::profile::git_config_git2::Git2Config;
