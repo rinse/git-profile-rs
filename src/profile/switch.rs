@@ -1,8 +1,8 @@
 use crate::profile::error::GitProfileError;
 use crate::git_config::GitConfig;
-use crate::profile::git_profile_dir::GitProfileDir;
+use crate::config_dir::ConfigDir;
 
-pub fn switch<T: GitConfig, U: GitProfileDir>(
+pub fn switch<T: GitConfig, U: ConfigDir>(
     profile_name: &str,
     global: bool,
     profile_dir: &U,
@@ -58,9 +58,9 @@ mod tests {
         }
     }
 
-    impl GitProfileDir for MockGitProfileDir {
-        fn path(&self) -> &std::path::Path {
-            &self.path
+    impl ConfigDir for MockGitProfileDir {
+        fn path(&self) -> std::path::PathBuf {
+            self.path.clone()
         }
     }
 
@@ -84,7 +84,7 @@ mod tests {
         fn set_include_path(
             &mut self,
             path: &str,
-            profile_dir: &impl crate::profile::git_profile_dir::GitProfileDir,
+            profile_dir: &impl crate::config_dir::ConfigDir,
         ) -> Result<(), crate::profile::error::GitProfileError> {
             // Remove any git-profile related paths (those under the profile directory)
             self.include_paths

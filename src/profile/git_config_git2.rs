@@ -22,7 +22,7 @@ impl GitConfig for Git2Config {
     fn set_include_path(
         &mut self,
         path: &str,
-        profile_dir: &impl super::git_profile_dir::GitProfileDir,
+        profile_dir: &impl crate::config_dir::ConfigDir,
     ) -> Result<(), GitProfileError> {
         // Get all existing include paths
         let mut existing_paths = self.get_include_paths()?;
