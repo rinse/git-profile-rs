@@ -48,6 +48,37 @@ If changes were accidentally made on the main branch instead of a feature branch
 
 This preserves your changes on the feature branch while ensuring main stays in sync with the remote.
 
+### Viewing Unresolved PR Comments
+
+To efficiently view only unresolved PR comments, use this command:
+
+```bash
+gh api graphql -f query='
+{
+  repository(owner: "rinse", name: "git-profile-rs") {
+    pullRequest(number: PR_NUMBER) {
+      reviewThreads(first: 100) {
+        nodes {
+          isResolved
+          path
+          line
+          comments(first: 1) {
+            nodes {
+              body
+              author {
+                login
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}' | jq '.data.repository.pullRequest.reviewThreads.nodes[] | select(.isResolved == false)'
+```
+
+Replace `PR_NUMBER` with the actual pull request number. This command filters to show only unresolved comments, saving tokens and making it easier to see what needs to be addressed.
+
 ## Code Style
 
 - No empty lines within function bodies
