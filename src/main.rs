@@ -4,8 +4,8 @@ mod git_config;
 mod profile;
 
 use crate::config_dir::ConfigDir;
-use crate::profile::git_config_git2::GitConfigGit2;
 use crate::profile::config_dir_git_profile::ConfigDirGitProfile;
+use crate::profile::git_config_git2::GitConfigGit2;
 use anyhow::Context;
 use clap::Parser;
 use cli::{Cli, Commands};

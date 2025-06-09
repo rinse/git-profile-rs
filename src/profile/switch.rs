@@ -1,6 +1,6 @@
-use crate::profile::error::GitProfileError;
-use crate::git_config::GitConfig;
 use crate::config_dir::ConfigDir;
+use crate::git_config::GitConfig;
+use crate::profile::error::GitProfileError;
 
 pub fn switch<T: GitConfig, U: ConfigDir>(
     profile_name: &str,
@@ -87,12 +87,18 @@ mod tests {
     }
 
     impl GitConfig for MockGitConfig {
-        fn add_include_path(&mut self, path: &str) -> Result<(), crate::profile::error::GitProfileError> {
+        fn add_include_path(
+            &mut self,
+            path: &str,
+        ) -> Result<(), crate::profile::error::GitProfileError> {
             self.include_paths.push(path.to_string());
             Ok(())
         }
 
-        fn remove_include_path(&mut self, path: &str) -> Result<(), crate::profile::error::GitProfileError> {
+        fn remove_include_path(
+            &mut self,
+            path: &str,
+        ) -> Result<(), crate::profile::error::GitProfileError> {
             self.include_paths.retain(|p| p != path);
             Ok(())
         }
