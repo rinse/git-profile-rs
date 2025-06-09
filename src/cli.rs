@@ -19,5 +19,9 @@ pub enum Commands {
         global: bool,
     },
     /// List available git profiles
-    List,
+    List {
+        /// Show verbose output with file paths
+        #[arg(long, short)]
+        verbose: bool,
+    },
 }

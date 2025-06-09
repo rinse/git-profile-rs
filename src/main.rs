@@ -29,7 +29,7 @@ fn main() -> anyhow::Result<()> {
             profile::switch::switch(&profile_name, global, &profile_dir, &mut config)
                 .with_context(|| format!("Failed to switch to profile '{}'", profile_name))?;
         }
-        Commands::List => {
+        Commands::List { verbose } => {
             let profile_dir = get_profile_dir()?;
             let config = Git2Config::open_local()
                 .or_else(|_| Git2Config::open_global())
@@ -40,10 +40,16 @@ fn main() -> anyhow::Result<()> {
             if profiles.is_empty() {
                 println!("No profiles found in {}", profile_dir);
             } else {
-                println!("Available profiles:");
+                if verbose {
+                    println!("Available profiles:");
+                }
                 for (name, path, is_current) in profiles {
                     let marker = if is_current { "* " } else { "  " };
-                    println!("{}{} -> {}", marker, name, path);
+                    if verbose {
+                        println!("{}{} -> {}", marker, name, path);
+                    } else {
+                        println!("{}{}", marker, name);
+                    }
                 }
             }
         }
