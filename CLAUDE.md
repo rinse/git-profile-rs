@@ -91,6 +91,12 @@ Replace `PR_NUMBER` with the actual pull request number. This command filters to
 - Place public functions before private functions
 - Don't use type aliases for Result types - write `Result<T, ErrorType>` explicitly
 
+## Naming Conventions
+
+- Struct names follow the pattern `{Purpose}{Implementation}` (e.g., `ConfigDirGitProfile`, `GitConfigGit2`)
+- File names match struct names in snake_case (e.g., `config_dir_git_profile.rs`, `git_config_git2.rs`)
+- This ensures consistency between file names and the primary struct they contain
+
 ## Profile Setup
 
 Profiles are expected at `$XDG_CONFIG_HOME/git-profile/<PROFILE-NAME>.gitconfig` (or `~/.config/git-profile/` if XDG_CONFIG_HOME is not set). Each profile should contain standard Git configuration like:

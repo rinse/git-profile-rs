@@ -5,14 +5,14 @@ mod profile;
 
 use crate::config_dir::ConfigDir;
 use crate::profile::git_config_git2::GitConfigGit2;
-use crate::profile::git_profile_config_dir::GitProfileConfigDir;
+use crate::profile::config_dir_git_profile::ConfigDirGitProfile;
 use anyhow::Context;
 use clap::Parser;
 use cli::{Cli, Commands};
 
 fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
-    let profile_dir = GitProfileConfigDir::new()?;
+    let profile_dir = ConfigDirGitProfile::new()?;
     match cli.command {
         Commands::Switch {
             profile_name,

@@ -2,11 +2,11 @@ use crate::config_dir::ConfigDir;
 use crate::profile::error::GitProfileError;
 use std::path::PathBuf;
 
-pub struct GitProfileConfigDir {
+pub struct ConfigDirGitProfile {
     path: PathBuf,
 }
 
-impl GitProfileConfigDir {
+impl ConfigDirGitProfile {
     pub fn new() -> Result<Self, GitProfileError> {
         let xdg_config = if let Ok(xdg_config) = std::env::var("XDG_CONFIG_HOME") {
             xdg_config
@@ -17,11 +17,11 @@ impl GitProfileConfigDir {
             format!("{}/.config", home)
         };
         let path = PathBuf::from(format!("{}/git-profile", xdg_config));
-        Ok(GitProfileConfigDir { path })
+        Ok(ConfigDirGitProfile { path })
     }
 }
 
-impl ConfigDir for GitProfileConfigDir {
+impl ConfigDir for ConfigDirGitProfile {
     fn path(&self) -> PathBuf {
         self.path.clone()
     }
