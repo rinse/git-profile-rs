@@ -20,9 +20,22 @@ impl Git2Config {
 
 impl GitConfig for Git2Config {
     fn set_include_path(&mut self, path: &str) -> Result<(), GitProfileError> {
+        // Get all existing include paths
+        let mut existing_paths = self.get_include_paths()?;
+        // Remove any git-profile related paths (those containing "git-profile")
+        existing_paths.retain(|p| !p.contains("git-profile"));
+        // Add the new path
+        existing_paths.push(path.to_string());
+        // Remove all include.path entries first
         self.config
-            .set_str("include.path", path)
+            .remove_multivar("include.path", ".*")
             .map_err(GitProfileError::ConfigAccess)?;
+        // Add all paths back as multivars
+        for include_path in existing_paths {
+            self.config
+                .set_multivar("include.path", "^$", &include_path)
+                .map_err(GitProfileError::ConfigAccess)?;
+        }
         Ok(())
     }
     fn get_include_paths(&self) -> Result<Vec<String>, GitProfileError> {

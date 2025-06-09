@@ -36,36 +36,37 @@ fn validate_profile_name(profile_name: &str) -> Result<(), GitProfileError> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::collections::HashMap;
 
     struct MockGitConfig {
-        config: HashMap<String, String>,
+        include_paths: Vec<String>,
     }
 
     impl MockGitConfig {
         fn new() -> Self {
             MockGitConfig {
-                config: HashMap::new(),
+                include_paths: Vec::new(),
             }
         }
 
         fn get(&self, key: &str) -> Option<&String> {
-            self.config.get(key)
+            if key == "include.path" && !self.include_paths.is_empty() {
+                self.include_paths.last()
+            } else {
+                None
+            }
         }
     }
 
     impl GitConfig for MockGitConfig {
         fn set_include_path(&mut self, path: &str) -> Result<(), crate::error::GitProfileError> {
-            self.config
-                .insert("include.path".to_string(), path.to_string());
+            // Remove any git-profile related paths
+            self.include_paths.retain(|p| !p.contains("git-profile"));
+            // Add the new path
+            self.include_paths.push(path.to_string());
             Ok(())
         }
         fn get_include_paths(&self) -> Result<Vec<String>, crate::error::GitProfileError> {
-            Ok(self
-                .config
-                .get("include.path")
-                .map(|p| vec![p.clone()])
-                .unwrap_or_default())
+            Ok(self.include_paths.clone())
         }
     }
 
@@ -116,6 +117,55 @@ mod tests {
         assert!(validate_profile_name("invalid\0profile").is_err());
         assert!(validate_profile_name(".").is_err());
         assert!(validate_profile_name("..").is_err());
+    }
+
+    #[test]
+    fn test_switch_preserves_other_includes() {
+        let mut mock_config = MockGitConfig::new();
+        // Set up existing includes
+        mock_config
+            .include_paths
+            .push("/path/to/delta.gitconfig".to_string());
+        mock_config
+            .include_paths
+            .push("/another/config.gitconfig".to_string());
+        let result = switch(
+            "work",
+            false,
+            "/home/user/.config/git-profile",
+            &mut mock_config,
+        );
+        assert!(result.is_ok());
+        // Check that other includes are preserved
+        let paths = mock_config.get_include_paths().unwrap();
+        assert_eq!(paths.len(), 3);
+        assert_eq!(paths[0], "/path/to/delta.gitconfig");
+        assert_eq!(paths[1], "/another/config.gitconfig");
+        assert_eq!(paths[2], "/home/user/.config/git-profile/work.gitconfig");
+    }
+
+    #[test]
+    fn test_switch_replaces_previous_git_profile() {
+        let mut mock_config = MockGitConfig::new();
+        // Set up existing includes including a git-profile one
+        mock_config
+            .include_paths
+            .push("/path/to/delta.gitconfig".to_string());
+        mock_config
+            .include_paths
+            .push("/home/user/.config/git-profile/personal.gitconfig".to_string());
+        let result = switch(
+            "work",
+            false,
+            "/home/user/.config/git-profile",
+            &mut mock_config,
+        );
+        assert!(result.is_ok());
+        // Check that the old git-profile include is replaced
+        let paths = mock_config.get_include_paths().unwrap();
+        assert_eq!(paths.len(), 2);
+        assert_eq!(paths[0], "/path/to/delta.gitconfig");
+        assert_eq!(paths[1], "/home/user/.config/git-profile/work.gitconfig");
     }
 
     #[test]
