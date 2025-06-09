@@ -13,12 +13,12 @@ git-profile-rs is a Rust CLI tool for managing Git profiles. It allows users to 
 - **Profile Module**: `src/profile/` contains profile management functionality
   - `src/profile/switch.rs`: Core switching logic using git2 to modify Git configuration
 
-The tool modifies Git configuration by adding include paths to either local repository config (default) or global Git config (with --global flag).
+The tool modifies Git configuration by adding include paths to the local repository config.
 
 ## Development Commands
 
 - **Build**: `cargo build`
-- **Run**: `cargo run -- switch <PROFILE-NAME> [--global]`
+- **Run**: `cargo run -- switch <PROFILE-NAME>`
 - **Check code**: `cargo clippy`
 - **Check formatting**: `cargo fmt --check` (run before committing)
 - **Run tests**: `cargo test`

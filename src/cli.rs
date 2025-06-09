@@ -14,9 +14,6 @@ pub enum Commands {
     Switch {
         /// Profile name to switch to
         profile_name: String,
-        /// Apply globally instead of locally
-        #[arg(long, short)]
-        global: bool,
     },
     /// List available git profiles
     List {
