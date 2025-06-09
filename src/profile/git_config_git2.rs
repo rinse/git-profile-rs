@@ -19,10 +19,27 @@ impl Git2Config {
 }
 
 impl GitConfig for Git2Config {
-    fn set_include_path(&mut self, path: &str) -> Result<(), GitProfileError> {
+    fn set_include_path(
+        &mut self,
+        path: &str,
+        profile_dir: &impl super::git_profile_dir::GitProfileDir,
+    ) -> Result<(), GitProfileError> {
+        // Get all existing include paths
+        let mut existing_paths = self.get_include_paths()?;
+        // Remove any git-profile related paths (those under the profile directory)
+        existing_paths.retain(|p| !std::path::Path::new(p).starts_with(profile_dir.path()));
+        // Add the new path
+        existing_paths.push(path.to_string());
+        // Remove all include.path entries first
         self.config
-            .set_str("include.path", path)
+            .remove_multivar("include.path", ".*")
             .map_err(GitProfileError::ConfigAccess)?;
+        // Add all paths back as multivars
+        for include_path in existing_paths {
+            self.config
+                .set_multivar("include.path", "^$", &include_path)
+                .map_err(GitProfileError::ConfigAccess)?;
+        }
         Ok(())
     }
     fn get_include_paths(&self) -> Result<Vec<String>, GitProfileError> {

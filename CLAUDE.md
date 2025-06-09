@@ -82,6 +82,7 @@ Replace `PR_NUMBER` with the actual pull request number. This command filters to
 ## Code Style
 
 - No empty lines within function bodies
+- Single empty line between function declarations
 - All source files must end with a newline character
 - Empty lines must contain no spaces or tabs (completely empty)
 - Prefer functional-style code with conditional assignment to function pointers over duplicating code blocks

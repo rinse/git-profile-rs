@@ -1,15 +1,20 @@
 use crate::error::GitProfileError;
 use crate::profile::git_config::GitConfig;
+use crate::profile::git_profile_dir::GitProfileDir;
 
-pub fn switch<T: GitConfig>(
+pub fn switch<T: GitConfig, U: GitProfileDir>(
     profile_name: &str,
     global: bool,
-    profile_dir: &str,
+    profile_dir: &U,
     config: &mut T,
 ) -> anyhow::Result<()> {
     validate_profile_name(profile_name)?;
-    let profile_path = format!("{}/{}.gitconfig", profile_dir, profile_name);
-    config.set_include_path(&profile_path)?;
+    let profile_path = format!(
+        "{}/{}.gitconfig",
+        profile_dir.path().display(),
+        profile_name
+    );
+    config.set_include_path(&profile_path, profile_dir)?;
     if global {
         println!("Global git profile switched to: {}", profile_name);
     } else {
@@ -36,48 +41,68 @@ fn validate_profile_name(profile_name: &str) -> Result<(), GitProfileError> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::collections::HashMap;
 
     struct MockGitConfig {
-        config: HashMap<String, String>,
+        include_paths: Vec<String>,
+    }
+
+    struct MockGitProfileDir {
+        path: std::path::PathBuf,
+    }
+
+    impl MockGitProfileDir {
+        fn new(path: &str) -> Self {
+            MockGitProfileDir {
+                path: std::path::PathBuf::from(path),
+            }
+        }
+    }
+
+    impl GitProfileDir for MockGitProfileDir {
+        fn path(&self) -> &std::path::Path {
+            &self.path
+        }
     }
 
     impl MockGitConfig {
         fn new() -> Self {
             MockGitConfig {
-                config: HashMap::new(),
+                include_paths: Vec::new(),
             }
         }
 
         fn get(&self, key: &str) -> Option<&String> {
-            self.config.get(key)
+            if key == "include.path" && !self.include_paths.is_empty() {
+                self.include_paths.last()
+            } else {
+                None
+            }
         }
     }
 
     impl GitConfig for MockGitConfig {
-        fn set_include_path(&mut self, path: &str) -> Result<(), crate::error::GitProfileError> {
-            self.config
-                .insert("include.path".to_string(), path.to_string());
+        fn set_include_path(
+            &mut self,
+            path: &str,
+            profile_dir: &impl crate::profile::git_profile_dir::GitProfileDir,
+        ) -> Result<(), crate::error::GitProfileError> {
+            // Remove any git-profile related paths (those under the profile directory)
+            self.include_paths
+                .retain(|p| !std::path::Path::new(p).starts_with(profile_dir.path()));
+            // Add the new path
+            self.include_paths.push(path.to_string());
             Ok(())
         }
         fn get_include_paths(&self) -> Result<Vec<String>, crate::error::GitProfileError> {
-            Ok(self
-                .config
-                .get("include.path")
-                .map(|p| vec![p.clone()])
-                .unwrap_or_default())
+            Ok(self.include_paths.clone())
         }
     }
 
     #[test]
     fn test_switch_with_mock_config() {
         let mut mock_config = MockGitConfig::new();
-        let result = switch(
-            "testprofile",
-            false,
-            "/test/config/git-profile",
-            &mut mock_config,
-        );
+        let mock_profile_dir = MockGitProfileDir::new("/test/config/git-profile");
+        let result = switch("testprofile", false, &mock_profile_dir, &mut mock_config);
         assert!(result.is_ok());
         assert_eq!(
             mock_config.get("include.path"),
@@ -88,12 +113,8 @@ mod tests {
     #[test]
     fn test_switch_global_flag() {
         let mut mock_config = MockGitConfig::new();
-        let result = switch(
-            "globalprofile",
-            true,
-            "/test/config/git-profile",
-            &mut mock_config,
-        );
+        let mock_profile_dir = MockGitProfileDir::new("/test/config/git-profile");
+        let result = switch("globalprofile", true, &mock_profile_dir, &mut mock_config);
         assert!(result.is_ok());
         assert_eq!(
             mock_config.get("include.path"),
@@ -119,31 +140,88 @@ mod tests {
     }
 
     #[test]
+    fn test_switch_preserves_other_includes() {
+        let mut mock_config = MockGitConfig::new();
+        let mock_profile_dir = MockGitProfileDir::new("/home/user/.config/git-profile");
+        // Set up existing includes
+        mock_config
+            .include_paths
+            .push("/path/to/delta.gitconfig".to_string());
+        mock_config
+            .include_paths
+            .push("/another/config.gitconfig".to_string());
+        let result = switch("work", false, &mock_profile_dir, &mut mock_config);
+        assert!(result.is_ok());
+        // Check that other includes are preserved
+        let paths = mock_config.get_include_paths().unwrap();
+        assert_eq!(paths.len(), 3);
+        assert_eq!(paths[0], "/path/to/delta.gitconfig");
+        assert_eq!(paths[1], "/another/config.gitconfig");
+        assert_eq!(paths[2], "/home/user/.config/git-profile/work.gitconfig");
+    }
+
+    #[test]
+    fn test_switch_replaces_previous_git_profile() {
+        let mut mock_config = MockGitConfig::new();
+        let mock_profile_dir = MockGitProfileDir::new("/home/user/.config/git-profile");
+        // Set up existing includes including a git-profile one
+        mock_config
+            .include_paths
+            .push("/path/to/delta.gitconfig".to_string());
+        mock_config
+            .include_paths
+            .push("/home/user/.config/git-profile/personal.gitconfig".to_string());
+        let result = switch("work", false, &mock_profile_dir, &mut mock_config);
+        assert!(result.is_ok());
+        // Check that the old git-profile include is replaced
+        let paths = mock_config.get_include_paths().unwrap();
+        assert_eq!(paths.len(), 2);
+        assert_eq!(paths[0], "/path/to/delta.gitconfig");
+        assert_eq!(paths[1], "/home/user/.config/git-profile/work.gitconfig");
+    }
+
+    #[test]
     fn test_switch_with_invalid_profile_names() {
         let mut mock_config = MockGitConfig::new();
+        let mock_profile_dir = MockGitProfileDir::new("/test/config");
 
         // Test empty profile name
-        let result = switch("", false, "/test/config", &mut mock_config);
+        let result = switch("", false, &mock_profile_dir, &mut mock_config);
         assert!(result.is_err());
 
         // Test profile name with forward slash
-        let result = switch("invalid/profile", false, "/test/config", &mut mock_config);
+        let result = switch(
+            "invalid/profile",
+            false,
+            &mock_profile_dir,
+            &mut mock_config,
+        );
         assert!(result.is_err());
 
         // Test profile name with backslash
-        let result = switch("invalid\\profile", false, "/test/config", &mut mock_config);
+        let result = switch(
+            "invalid\\profile",
+            false,
+            &mock_profile_dir,
+            &mut mock_config,
+        );
         assert!(result.is_err());
 
         // Test profile name with null character
-        let result = switch("invalid\0profile", false, "/test/config", &mut mock_config);
+        let result = switch(
+            "invalid\0profile",
+            false,
+            &mock_profile_dir,
+            &mut mock_config,
+        );
         assert!(result.is_err());
 
         // Test "." as profile name
-        let result = switch(".", false, "/test/config", &mut mock_config);
+        let result = switch(".", false, &mock_profile_dir, &mut mock_config);
         assert!(result.is_err());
 
         // Test ".." as profile name
-        let result = switch("..", false, "/test/config", &mut mock_config);
+        let result = switch("..", false, &mock_profile_dir, &mut mock_config);
         assert!(result.is_err());
     }
 }

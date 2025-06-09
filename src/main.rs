@@ -3,6 +3,7 @@ mod error;
 mod profile;
 
 use crate::profile::git_config_git2::Git2Config;
+use crate::profile::git_profile_dir::{DefaultGitProfileDir, GitProfileDir};
 use anyhow::Context;
 use clap::Parser;
 use cli::{Cli, Commands};
@@ -25,18 +26,17 @@ fn main() -> anyhow::Result<()> {
                     if global { "global" } else { "local" }
                 )
             })?;
-            let profile_dir = get_profile_dir()?;
+            let profile_dir = DefaultGitProfileDir::new()?;
             profile::switch::switch(&profile_name, global, &profile_dir, &mut config)
                 .with_context(|| format!("Failed to switch to profile '{}'", profile_name))?;
         }
         Commands::List { verbose } => {
-            let profile_dir = get_profile_dir()?;
+            let profile_dir = DefaultGitProfileDir::new()?;
             let config = Git2Config::open_local()
                 .or_else(|_| Git2Config::open_global())
                 .with_context(|| "Failed to open git configuration")?;
-            let profiles =
-                profile::list::list_profiles(std::path::Path::new(&profile_dir), &config)
-                    .with_context(|| "Failed to list profiles")?;
+            let profiles = profile::list::list_profiles(profile_dir.path(), &config)
+                .with_context(|| "Failed to list profiles")?;
             for (name, path, is_current) in profiles {
                 let marker = if is_current { "* " } else { "  " };
                 if verbose {
@@ -48,17 +48,4 @@ fn main() -> anyhow::Result<()> {
         }
     }
     Ok(())
-}
-
-fn get_profile_dir() -> Result<String, crate::error::GitProfileError> {
-    let xdg_config = if let Ok(xdg_config) = std::env::var("XDG_CONFIG_HOME") {
-        xdg_config
-    } else {
-        let home =
-            std::env::var("HOME").map_err(|_| crate::error::GitProfileError::Environment {
-                variable: "HOME".to_string(),
-            })?;
-        format!("{}/.config", home)
-    };
-    Ok(format!("{}/git-profile", xdg_config))
 }
