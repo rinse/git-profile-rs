@@ -4,7 +4,6 @@ use crate::profile::error::GitProfileError;
 
 pub fn switch<T: GitConfig, U: ConfigDir>(
     profile_name: &str,
-    global: bool,
     profile_dir: &U,
     config: &mut T,
 ) -> anyhow::Result<()> {
@@ -21,11 +20,7 @@ pub fn switch<T: GitConfig, U: ConfigDir>(
         }
     }
     config.add_include_path(&profile_path)?;
-    if global {
-        println!("Global git profile switched to: {}", profile_name);
-    } else {
-        println!("Local git profile switched to: {}", profile_name);
-    }
+    println!("Git profile switched to: {}", profile_name);
     Ok(())
 }
 
@@ -112,23 +107,11 @@ mod tests {
     fn test_switch_with_mock_config() {
         let mut mock_config = MockGitConfig::new();
         let mock_profile_dir = MockGitProfileDir::new("/test/config/git-profile");
-        let result = switch("testprofile", false, &mock_profile_dir, &mut mock_config);
+        let result = switch("testprofile", &mock_profile_dir, &mut mock_config);
         assert!(result.is_ok());
         assert_eq!(
             mock_config.get("include.path"),
             Some(&"/test/config/git-profile/testprofile.gitconfig".to_string())
-        );
-    }
-
-    #[test]
-    fn test_switch_global_flag() {
-        let mut mock_config = MockGitConfig::new();
-        let mock_profile_dir = MockGitProfileDir::new("/test/config/git-profile");
-        let result = switch("globalprofile", true, &mock_profile_dir, &mut mock_config);
-        assert!(result.is_ok());
-        assert_eq!(
-            mock_config.get("include.path"),
-            Some(&"/test/config/git-profile/globalprofile.gitconfig".to_string())
         );
     }
 
@@ -160,7 +143,7 @@ mod tests {
         mock_config
             .include_paths
             .push("/another/config.gitconfig".to_string());
-        let result = switch("work", false, &mock_profile_dir, &mut mock_config);
+        let result = switch("work", &mock_profile_dir, &mut mock_config);
         assert!(result.is_ok());
         // Check that other includes are preserved
         let paths = mock_config.get_include_paths().unwrap();
@@ -181,7 +164,7 @@ mod tests {
         mock_config
             .include_paths
             .push("/home/user/.config/git-profile/personal.gitconfig".to_string());
-        let result = switch("work", false, &mock_profile_dir, &mut mock_config);
+        let result = switch("work", &mock_profile_dir, &mut mock_config);
         assert!(result.is_ok());
         // Check that the old git-profile include is replaced
         let paths = mock_config.get_include_paths().unwrap();
@@ -196,42 +179,27 @@ mod tests {
         let mock_profile_dir = MockGitProfileDir::new("/test/config");
 
         // Test empty profile name
-        let result = switch("", false, &mock_profile_dir, &mut mock_config);
+        let result = switch("", &mock_profile_dir, &mut mock_config);
         assert!(result.is_err());
 
         // Test profile name with forward slash
-        let result = switch(
-            "invalid/profile",
-            false,
-            &mock_profile_dir,
-            &mut mock_config,
-        );
+        let result = switch("invalid/profile", &mock_profile_dir, &mut mock_config);
         assert!(result.is_err());
 
         // Test profile name with backslash
-        let result = switch(
-            "invalid\\profile",
-            false,
-            &mock_profile_dir,
-            &mut mock_config,
-        );
+        let result = switch("invalid\\profile", &mock_profile_dir, &mut mock_config);
         assert!(result.is_err());
 
         // Test profile name with null character
-        let result = switch(
-            "invalid\0profile",
-            false,
-            &mock_profile_dir,
-            &mut mock_config,
-        );
+        let result = switch("invalid\0profile", &mock_profile_dir, &mut mock_config);
         assert!(result.is_err());
 
         // Test "." as profile name
-        let result = switch(".", false, &mock_profile_dir, &mut mock_config);
+        let result = switch(".", &mock_profile_dir, &mut mock_config);
         assert!(result.is_err());
 
         // Test ".." as profile name
-        let result = switch("..", false, &mock_profile_dir, &mut mock_config);
+        let result = switch("..", &mock_profile_dir, &mut mock_config);
         assert!(result.is_err());
     }
 }
