@@ -29,10 +29,11 @@ impl GitConfig for GitConfigGit2 {
 
     fn get_include_paths(&self) -> Result<Vec<String>, GitProfileError> {
         let mut paths = Vec::new();
-        let mut entries = self
-            .config
-            .entries(Some("include.path"))
-            .map_err(GitProfileError::ConfigAccess)?;
+        let mut entries = match self.config.entries(Some("include.path")) {
+            Ok(entries) => entries,
+            Err(e) if e.code() == git2::ErrorCode::NotFound => return Ok(paths),
+            Err(e) => return Err(GitProfileError::ConfigAccess(e)),
+        };
         while let Some(entry) = entries.next() {
             match entry {
                 Ok(entry) => {
