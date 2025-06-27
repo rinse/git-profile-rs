@@ -29,8 +29,8 @@ fn switch(profile_name: &str, profile_dir: &impl ConfigDir) -> anyhow::Result<()
 }
 
 fn list(verbose: bool, profile_dir: &impl ConfigDir) -> anyhow::Result<()> {
-    let config = GitConfigGit2::open().with_context(|| "Failed to open git configuration")?;
-    let profiles = profile::list::list_profiles(&profile_dir.path(), &config)
+    let config = GitConfigGit2::open_optional();
+    let profiles = profile::list::list_profiles(&profile_dir.path(), config.as_ref())
         .with_context(|| "Failed to list profiles")?;
     for (name, path, is_current) in profiles {
         let marker = if is_current { "* " } else { "  " };

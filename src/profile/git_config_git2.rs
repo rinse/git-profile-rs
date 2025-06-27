@@ -12,6 +12,12 @@ impl GitConfigGit2 {
         let config = repo.config().map_err(GitProfileError::ConfigAccess)?;
         Ok(GitConfigGit2 { config })
     }
+
+    pub fn open_optional() -> Option<Self> {
+        let repo = Repository::open(".").ok()?;
+        let config = repo.config().ok()?;
+        Some(GitConfigGit2 { config })
+    }
 }
 
 impl GitConfig for GitConfigGit2 {

@@ -5,12 +5,15 @@ use std::path::{Path, PathBuf};
 
 pub fn list_profiles(
     profile_dir: &Path,
-    config: &impl GitConfig,
+    config: Option<&impl GitConfig>,
 ) -> Result<Vec<(String, String, bool)>, GitProfileError> {
     if !profile_dir.exists() {
         return Ok(Vec::new());
     }
-    let current_include_paths = config.get_include_paths()?;
+    let current_include_paths = config
+        .map(|c| c.get_include_paths())
+        .transpose()?
+        .unwrap_or_default();
     let entries = fs::read_dir(profile_dir).map_err(|e| {
         GitProfileError::ConfigError(format!("Failed to read profile directory: {}", e))
     })?;
