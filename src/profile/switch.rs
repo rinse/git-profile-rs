@@ -8,11 +8,13 @@ pub fn switch<T: GitConfig, U: ConfigDir>(
     config: &mut T,
 ) -> anyhow::Result<()> {
     validate_profile_name(profile_name)?;
-    let profile_path = format!(
+    let raw_profile_path = format!(
         "{}/{}.gitconfig",
         profile_dir.path().display(),
         profile_name
     );
+    // Convert Windows backslashes to forward slashes for Git include path compatibility
+    let profile_path = raw_profile_path.replace("\\", "/");
     let existing_paths = config.get_include_paths()?;
     for path in &existing_paths {
         if std::path::Path::new(path).starts_with(profile_dir.path()) {
