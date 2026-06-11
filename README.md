@@ -13,8 +13,8 @@ This project is primarily AI-generated and created for testing purposes. The aut
 # 2. Create a profile
 mkdir -p ~/.config/git-profile
 echo '[user]
-    name = "Your Name"
-    email = "your.email@example.com"' > ~/.config/git-profile/work.gitconfig
+    name = Your Name
+    email = your.email@example.com' > ~/.config/git-profile/work.gitconfig
 # 3. Switch to profile in current repo
 git-profile switch work
 ```
@@ -49,27 +49,20 @@ cargo install git-profile
 ## Usage
 
 You need to prepare for a *git profile* first.
-Your profiles are placed on `$XDG_CONFIG/git-profile/<PROFILE-NAME>.gitconfig`.
+Your profiles are placed on `$XDG_CONFIG_HOME/git-profile/<PROFILE-NAME>.gitconfig`.
 
 The following command will switch the *git profile*.
 
 ```bash
-git-profile switch <PROFILE-NAME> [--global]
+git-profile switch <PROFILE-NAME>
 ```
 
-### Local vs Global Configuration
-
-- **Without `--global`**: The profile is applied only to the current repository by modifying `.git/config`. This is useful when you want different identities for different projects.
-- **With `--global`**: The profile is applied system-wide by modifying your global Git configuration (`~/.gitconfig`). All repositories will use this profile unless overridden by local configuration.
-
-Note: Local repository configuration always takes precedence over global configuration.
-
 This command will write down the following line in the configuration file.
-Note that `$XDG_CONFIG` will be resolved on `.git/config` because of the restriction of Git.
+Note that `$XDG_CONFIG_HOME` will be resolved on `.git/config` because of the restriction of Git.
 
 ```gitconfig
 [include]
-	path = <$XDG_CONFIG>/git-profile/<PROFILE-NAME>.gitconfig
+	path = <$XDG_CONFIG_HOME>/git-profile/<PROFILE-NAME>.gitconfig
 ```
 
 ### Verifying Active Profile
@@ -85,14 +78,10 @@ git config user.name
 git config user.email
 ```
 
-To see if a profile is set locally or globally:
+To check the local repository config:
 
 ```bash
-# Check local repository config
 git config --local --get-regexp include.path
-
-# Check global config
-git config --global --get-regexp include.path
 ```
 
 ## Sample Profile
