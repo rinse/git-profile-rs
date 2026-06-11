@@ -8,13 +8,18 @@ pub fn switch<T: GitConfig, U: ConfigDir>(
     config: &mut T,
 ) -> anyhow::Result<()> {
     validate_profile_name(profile_name)?;
-    let raw_profile_path = format!(
-        "{}/{}.gitconfig",
-        profile_dir.path().display(),
-        profile_name
-    );
+    let profile_path_buf = profile_dir
+        .path()
+        .join(format!("{}.gitconfig", profile_name));
+    if !profile_path_buf.exists() {
+        return Err(GitProfileError::ProfileNotFound {
+            name: profile_name.to_string(),
+            path: profile_path_buf.display().to_string(),
+        }
+        .into());
+    }
     // Convert Windows backslashes to forward slashes for Git include path compatibility
-    let profile_path = raw_profile_path.replace("\\", "/");
+    let profile_path = profile_path_buf.display().to_string().replace("\\", "/");
     let existing_paths = config.get_include_paths()?;
     for path in &existing_paths {
         if std::path::Path::new(path).starts_with(profile_dir.path()) {
@@ -22,7 +27,6 @@ pub fn switch<T: GitConfig, U: ConfigDir>(
         }
     }
     config.add_include_path(&profile_path)?;
-    println!("Git profile switched to: {}", profile_name);
     Ok(())
 }
 
@@ -54,9 +58,9 @@ mod tests {
     }
 
     impl MockGitProfileDir {
-        fn new(path: &str) -> Self {
+        fn new(path: &std::path::Path) -> Self {
             MockGitProfileDir {
-                path: std::path::PathBuf::from(path),
+                path: path.to_path_buf(),
             }
         }
     }
@@ -107,13 +111,22 @@ mod tests {
 
     #[test]
     fn test_switch_with_mock_config() {
+        let temp_dir = tempfile::tempdir().unwrap();
+        std::fs::write(temp_dir.path().join("testprofile.gitconfig"), "").unwrap();
         let mut mock_config = MockGitConfig::new();
-        let mock_profile_dir = MockGitProfileDir::new("/test/config/git-profile");
+        let mock_profile_dir = MockGitProfileDir::new(temp_dir.path());
         let result = switch("testprofile", &mock_profile_dir, &mut mock_config);
         assert!(result.is_ok());
         assert_eq!(
             mock_config.get("include.path"),
-            Some(&"/test/config/git-profile/testprofile.gitconfig".to_string())
+            Some(
+                &temp_dir
+                    .path()
+                    .join("testprofile.gitconfig")
+                    .display()
+                    .to_string()
+                    .replace("\\", "/")
+            )
         );
     }
 
@@ -136,8 +149,10 @@ mod tests {
 
     #[test]
     fn test_switch_preserves_other_includes() {
+        let temp_dir = tempfile::tempdir().unwrap();
+        std::fs::write(temp_dir.path().join("work.gitconfig"), "").unwrap();
         let mut mock_config = MockGitConfig::new();
-        let mock_profile_dir = MockGitProfileDir::new("/home/user/.config/git-profile");
+        let mock_profile_dir = MockGitProfileDir::new(temp_dir.path());
         // Set up existing includes
         mock_config
             .include_paths
@@ -152,33 +167,58 @@ mod tests {
         assert_eq!(paths.len(), 3);
         assert_eq!(paths[0], "/path/to/delta.gitconfig");
         assert_eq!(paths[1], "/another/config.gitconfig");
-        assert_eq!(paths[2], "/home/user/.config/git-profile/work.gitconfig");
+        assert_eq!(
+            paths[2],
+            temp_dir
+                .path()
+                .join("work.gitconfig")
+                .display()
+                .to_string()
+                .replace("\\", "/")
+        );
     }
 
     #[test]
     fn test_switch_replaces_previous_git_profile() {
+        let temp_dir = tempfile::tempdir().unwrap();
+        std::fs::write(temp_dir.path().join("work.gitconfig"), "").unwrap();
+        std::fs::write(temp_dir.path().join("personal.gitconfig"), "").unwrap();
         let mut mock_config = MockGitConfig::new();
-        let mock_profile_dir = MockGitProfileDir::new("/home/user/.config/git-profile");
+        let mock_profile_dir = MockGitProfileDir::new(temp_dir.path());
         // Set up existing includes including a git-profile one
         mock_config
             .include_paths
             .push("/path/to/delta.gitconfig".to_string());
-        mock_config
-            .include_paths
-            .push("/home/user/.config/git-profile/personal.gitconfig".to_string());
+        mock_config.include_paths.push(
+            temp_dir
+                .path()
+                .join("personal.gitconfig")
+                .display()
+                .to_string()
+                .replace("\\", "/"),
+        );
         let result = switch("work", &mock_profile_dir, &mut mock_config);
         assert!(result.is_ok());
         // Check that the old git-profile include is replaced
         let paths = mock_config.get_include_paths().unwrap();
         assert_eq!(paths.len(), 2);
         assert_eq!(paths[0], "/path/to/delta.gitconfig");
-        assert_eq!(paths[1], "/home/user/.config/git-profile/work.gitconfig");
+        assert_eq!(
+            paths[1],
+            temp_dir
+                .path()
+                .join("work.gitconfig")
+                .display()
+                .to_string()
+                .replace("\\", "/")
+        );
     }
 
     #[test]
     fn test_switch_with_invalid_profile_names() {
+        let temp_dir = tempfile::tempdir().unwrap();
         let mut mock_config = MockGitConfig::new();
-        let mock_profile_dir = MockGitProfileDir::new("/test/config");
+        let mock_profile_dir = MockGitProfileDir::new(temp_dir.path());
 
         // Test empty profile name
         let result = switch("", &mock_profile_dir, &mut mock_config);
@@ -203,5 +243,21 @@ mod tests {
         // Test ".." as profile name
         let result = switch("..", &mock_profile_dir, &mut mock_config);
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_switch_with_nonexistent_profile_returns_error() {
+        let temp_dir = tempfile::tempdir().unwrap();
+        let mut mock_config = MockGitConfig::new();
+        let mock_profile_dir = MockGitProfileDir::new(temp_dir.path());
+        mock_config
+            .include_paths
+            .push("/path/to/delta.gitconfig".to_string());
+        let result = switch("missing", &mock_profile_dir, &mut mock_config);
+        assert!(result.is_err());
+        // Include paths must remain unchanged
+        let paths = mock_config.get_include_paths().unwrap();
+        assert_eq!(paths.len(), 1);
+        assert_eq!(paths[0], "/path/to/delta.gitconfig");
     }
 }

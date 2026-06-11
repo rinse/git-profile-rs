@@ -3,6 +3,7 @@ use clap::{Parser, Subcommand};
 #[derive(Parser, Debug)]
 #[command(name = "git-profile")]
 #[command(about = "A Rust implementation for Git Profile management")]
+#[command(version)]
 pub struct Cli {
     #[command(subcommand)]
     pub command: Commands,

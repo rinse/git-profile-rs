@@ -12,8 +12,11 @@ pub enum GitProfileError {
     #[error("Environment variable error: {variable}")]
     Environment { variable: String },
 
-    #[error("Profile path error: {path}")]
+    #[error("Invalid profile name: {path}")]
     ProfilePath { path: String },
+
+    #[error("Profile '{name}' not found at {path}")]
+    ProfileNotFound { name: String, path: String },
 
     #[error("IO error: {0}")]
     Io(#[from] std::io::Error),

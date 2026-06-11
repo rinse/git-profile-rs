@@ -25,6 +25,7 @@ fn switch(profile_name: &str, profile_dir: &impl ConfigDir) -> anyhow::Result<()
         GitConfigGit2::open().with_context(|| "Failed to open local git configuration")?;
     profile::switch::switch(profile_name, profile_dir, &mut config)
         .with_context(|| format!("Failed to switch to profile '{}'", profile_name))?;
+    println!("Git profile switched to: {}", profile_name);
     Ok(())
 }
 
