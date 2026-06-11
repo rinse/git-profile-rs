@@ -1,6 +1,8 @@
 name: CI
 
-on: push
+on:
+  push:
+  pull_request:
 
 env:
   CARGO_TERM_COLOR: always
@@ -25,7 +27,7 @@ jobs:
       - name: Run tests
         run: cargo test
       - name: Check code with clippy
-        run: cargo clippy -- -D warnings
+        run: cargo clippy --all-targets -- -D warnings
       - name: Check formatting
         run: cargo fmt --check
       - name: Build release
