@@ -24,8 +24,8 @@ fn switch(profile_name: &str, profile_dir: &impl ConfigDir) -> anyhow::Result<()
     let mut config =
         GitConfigGit2::open().with_context(|| "Failed to open local git configuration")?;
     profile::switch::switch(profile_name, profile_dir, &mut config)
-        .with_context(|| format!("Failed to switch to profile '{}'", profile_name))?;
-    println!("Git profile switched to: {}", profile_name);
+        .with_context(|| format!("Failed to switch to profile '{profile_name}'"))?;
+    println!("Git profile switched to: {profile_name}");
     Ok(())
 }
 
@@ -36,9 +36,9 @@ fn list(verbose: bool, profile_dir: &impl ConfigDir) -> anyhow::Result<()> {
     for (name, path, is_current) in profiles {
         let marker = if is_current { "* " } else { "  " };
         if verbose {
-            println!("{}{} -> {}", marker, name, path);
+            println!("{marker}{name} -> {path}");
         } else {
-            println!("{}{}", marker, name);
+            println!("{marker}{name}");
         }
     }
     Ok(())

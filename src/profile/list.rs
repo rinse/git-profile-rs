@@ -15,12 +15,12 @@ pub fn list_profiles(
         .transpose()?
         .unwrap_or_default();
     let entries = fs::read_dir(profile_dir).map_err(|e| {
-        GitProfileError::ConfigError(format!("Failed to read profile directory: {}", e))
+        GitProfileError::ConfigError(format!("Failed to read profile directory: {e}"))
     })?;
     let mut profiles = Vec::new();
     for entry in entries {
         let entry = entry.map_err(|e| {
-            GitProfileError::ConfigError(format!("Failed to read directory entry: {}", e))
+            GitProfileError::ConfigError(format!("Failed to read directory entry: {e}"))
         })?;
         if let Some(profile) = process_profile_entry(entry.path(), &current_include_paths) {
             profiles.push(profile);

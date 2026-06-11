@@ -8,9 +8,7 @@ pub fn switch<T: GitConfig, U: ConfigDir>(
     config: &mut T,
 ) -> anyhow::Result<()> {
     validate_profile_name(profile_name)?;
-    let profile_path_buf = profile_dir
-        .path()
-        .join(format!("{}.gitconfig", profile_name));
+    let profile_path_buf = profile_dir.path().join(format!("{profile_name}.gitconfig"));
     if !profile_path_buf.exists() {
         return Err(GitProfileError::ProfileNotFound {
             name: profile_name.to_string(),
